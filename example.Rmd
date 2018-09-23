@@ -1,0 +1,70 @@
+---
+title: "Weighting Packages"
+output: html_document
+---
+
++ [{srvyr}](https://github.com/gergness/srvyr)
++ [{TAM}](https://www.rdocumentation.org/packages/TAM/versions/2.12-18/topics/weighted_Stats)
++ [{Weighted.Desc.Stat}](https://rdrr.io/cran/Weighted.Desc.Stat/man/)
++ [{questionr}](https://juba.github.io/questionr/reference/index.html)
++ [{sjstats}](https://www.rdocumentation.org/packages/sjstats/versions/0.17.0/topics/weight)
+
+
+```{r}
+pacman::p_load(srvyr, TAM, Weighted.Desc.Stat, questionr, sjstats, tidyverse)
+```
+
+
+## Data
+
+```{r}
+load("data/ess1_8.Rdata")
+```
+
+## Examples
+
+### srvyr
+
+```{r}
+ess1_8 %>%
+   srvyr::as_survey_design(weights = pweight) %>% 
+   summarise(imueclt = srvyr::survey_mean(imueclt, na.rm = T)) 
+```
+
+
+### TAM
+
+```{r}
+ess1_8 %>% 
+  summarise(skew = TAM::weighted_skewness(x = imueclt, w = pweight),
+            kurt = TAM::weighted_curtosis(x = imueclt, w = pweight))
+```
+
+### Weighted.Desc.Stat
+
+```{r}
+ess1_8 %>% 
+  drop_na(imueclt, pweight) %>% 
+  summarise(skew = Weighted.Desc.Stat::w.skewness(x = imueclt, mu = pweight),
+            kurt = Weighted.Desc.Stat::w.kurtosis(x = imueclt, mu = pweight))
+```
+
+### questionr
+
+```{r}
+questionr::wtd.table(ess1_8$imueclt, weights = ess1_8$pweight) %>% 
+  as_tibble()
+```
+
+
+### sjstats
+
+**DOESN'T WORK**
+
+```{r, eval = F}
+ess1_8 %>%
+  drop_na(imueclt) %>% 
+   mutate(imueclt = sjstats::weight2(imueclt, pweight))
+
+```
+
